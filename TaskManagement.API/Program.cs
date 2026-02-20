@@ -1,5 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using TaskManagement.Infrastructure.Persistence;
+using TaskManagement.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,10 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-// Register DbContext with SQL Server
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
+// One clean line instead of manually registering everything
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
 
