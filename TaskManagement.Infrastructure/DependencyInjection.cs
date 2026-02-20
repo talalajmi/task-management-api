@@ -50,6 +50,12 @@ public static class DependencyInjection
 
         services.AddAuthorization();
 
+        // Scans the Application assembly and registers
+        // all IRequestHandler implementations automatically
+        services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly)
+        );
+
         return services;
     }
 }
