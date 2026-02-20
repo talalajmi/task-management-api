@@ -1,3 +1,4 @@
+using TaskManagement.API.Middleware;
 using TaskManagement.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,10 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+// Exception middleware must be FIRST in the pipeline
+// so it can catch exceptions from all other middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 

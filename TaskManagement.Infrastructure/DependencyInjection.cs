@@ -27,6 +27,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         // Configure JWT authentication middleware
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
