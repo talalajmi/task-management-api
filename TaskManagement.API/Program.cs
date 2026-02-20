@@ -1,4 +1,5 @@
 using TaskManagement.API.Middleware;
+using TaskManagement.Application;
 using TaskManagement.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddApplication();
 
 // One clean line instead of manually registering everything
 builder.Services.AddInfrastructure(builder.Configuration);
