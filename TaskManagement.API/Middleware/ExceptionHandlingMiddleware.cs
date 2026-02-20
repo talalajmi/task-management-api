@@ -32,16 +32,34 @@ public class ExceptionHandlingMiddleware(
     {
         // Map exception types to HTTP status codes
         // This is where you define your error contract
-        var (statusCode, message) = exception switch
+        var (statusCode, message, errors) = exception switch
         {
-            InvalidOperationException => (HttpStatusCode.Conflict, exception.Message),
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized."),
-            KeyNotFoundException => (HttpStatusCode.NotFound, exception.Message),
-            ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
-            // Anything else is a server error — don't expose details
-            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred."),
+            FluentValidation.ValidationException vex => (
+                HttpStatusCode.BadRequest,
+                "Validation failed.",
+                (object?)
+                    vex
+                        .Errors.GroupBy(e => e.PropertyName)
+                        .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())
+            ),
+            InvalidOperationException => (
+                HttpStatusCode.Conflict,
+                exception.Message,
+                (object?)null
+            ),
+            UnauthorizedAccessException => (
+                HttpStatusCode.Unauthorized,
+                "Unauthorized.",
+                (object?)null
+            ),
+            KeyNotFoundException => (HttpStatusCode.NotFound, exception.Message, (object?)null),
+            ArgumentException => (HttpStatusCode.BadRequest, exception.Message, (object?)null),
+            _ => (
+                HttpStatusCode.InternalServerError,
+                "An unexpected error occurred.",
+                (object?)null
+            ),
         };
-
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
@@ -49,6 +67,7 @@ public class ExceptionHandlingMiddleware(
         {
             status = (int)statusCode,
             message,
+            errors,
             timestamp = DateTime.UtcNow,
         };
 
