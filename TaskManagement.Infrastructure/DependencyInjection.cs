@@ -1,4 +1,5 @@
 using System.Text;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -72,6 +73,22 @@ public static class DependencyInjection
         services.AddScoped<ICacheService, CacheService>();
 
         services.AddScoped<INotificationService, NotificationService>();
+
+        // Add inside AddInfrastructure method
+        var hangfireConnection = configuration.GetConnectionString("HangfireConnection")!;
+
+        services.AddHangfire(config =>
+            config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(hangfireConnection)
+        );
+
+        services.AddHangfireServer();
+
+        services.AddScoped<IBackgroundJobService, BackgroundJobService>();
+        services.AddScoped<TaskCleanupService>();
 
         return services;
     }

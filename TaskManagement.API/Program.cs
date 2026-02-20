@@ -1,7 +1,9 @@
+using Hangfire;
 using TaskManagement.API.Hubs;
 using TaskManagement.API.Middleware;
 using TaskManagement.Application;
 using TaskManagement.Infrastructure;
+using TaskManagement.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +38,19 @@ app.UseHttpsRedirection();
 // ORDER MATTERS — Authentication must come before Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Hangfire dashboard — lets you see all jobs visually
+// In production, protect this with authorization
+app.UseHangfireDashboard("/hangfire");
+
+// Register the recurring cleanup job
+// Cron.Daily = runs every day at midnight
+app.Services.GetRequiredService<IRecurringJobManager>()
+    .AddOrUpdate<TaskCleanupService>(
+        "overdue-task-check",
+        service => service.LogOverdueTasksAsync(),
+        Cron.Daily
+    );
 
 app.MapControllers();
 
