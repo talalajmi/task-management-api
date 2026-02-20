@@ -20,5 +20,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ORDER MATTERS — Authentication must come before Authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 app.Run();

@@ -1,15 +1,19 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using TaskManagement.Application.Interfaces;
+using TaskManagement.Application.Services;
 using TaskManagement.Domain.Interfaces;
 using TaskManagement.Infrastructure.Persistence;
+using TaskManagement.Infrastructure.Services;
 
 namespace TaskManagement.Infrastructure;
 
 public static class DependencyInjection
 {
-    // Extension method on IServiceCollection
-    // This is how you add all Infrastructure services in one line
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration
@@ -19,12 +23,30 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
         );
 
-        // Scoped means: one instance per HTTP request.
-        // Every request gets its own UnitOfWork (and therefore
-        // its own DbContext), which is exactly what we want.
-        // All repositories in one request share the same DbContext,
-        // which means they share the same transaction.
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        // Configure JWT authentication middleware
+        services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]!)
+                    ),
+                };
+            });
+
+        services.AddAuthorization();
 
         return services;
     }
