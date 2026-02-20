@@ -1,3 +1,7 @@
+using TaskManagement.Domain.Enums;
+
+namespace TaskManagement.Domain.Entities;
+
 public class TaskItem : BaseEntity
 {
     public string Title { get; set; } = string.Empty;
