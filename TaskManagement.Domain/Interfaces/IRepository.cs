@@ -1,4 +1,9 @@
-public interface IRepository<T> where T : BaseEntity
+using TaskManagement.Domain.Entities;
+
+namespace TaskManagement.Domain.Interfaces;
+
+public interface IRepository<T>
+    where T : BaseEntity
 {
     Task<T?> GetByIdAsync(Guid id);
     Task<IEnumerable<T>> GetAllAsync();

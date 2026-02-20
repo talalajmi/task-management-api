@@ -1,3 +1,5 @@
+namespace TaskManagement.Domain.Entities;
+
 public class AppUser : BaseEntity
 {
     public string FirstName { get; set; } = string.Empty;
@@ -7,7 +9,7 @@ public class AppUser : BaseEntity
 
     // Navigation property - one user has many projects
     public ICollection<Project> Projects { get; set; } = new List<Project>();
-    
+
     // Computed property - no database column needed
     public string FullName => $"{FirstName} {LastName}";
 }
