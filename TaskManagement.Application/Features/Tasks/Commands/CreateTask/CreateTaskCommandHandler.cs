@@ -6,13 +6,22 @@ using TaskManagement.Domain.Interfaces;
 
 namespace TaskManagement.Application.Features.Tasks.Commands.CreateTask;
 
-// IRequestHandler<TRequest, TResponse>
-// This is what MediatR looks for when CreateTaskCommand is sent
-public class CreateTaskCommandHandler(IUnitOfWork unitOfWork, ICacheService cache)
-    : IRequestHandler<CreateTaskCommand, TaskDto>
+public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, TaskDto>
 {
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly ICacheService _cache = cache;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cache;
+    private readonly INotificationService _notifications;
+
+    public CreateTaskCommandHandler(
+        IUnitOfWork unitOfWork,
+        ICacheService cache,
+        INotificationService notifications
+    )
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+        _notifications = notifications;
+    }
 
     public async Task<TaskDto> Handle(
         CreateTaskCommand request,
@@ -37,11 +46,9 @@ public class CreateTaskCommandHandler(IUnitOfWork unitOfWork, ICacheService cach
         await _unitOfWork.Tasks.AddAsync(task);
         await _unitOfWork.SaveChangesAsync();
 
-        // Invalidate the cache for this project's tasks
-        // Next GET request will fetch fresh data from database
         await _cache.RemoveAsync($"tasks:project:{request.ProjectId}");
 
-        return new TaskDto
+        var result = new TaskDto
         {
             Id = task.Id,
             Title = task.Title,
@@ -53,5 +60,10 @@ public class CreateTaskCommandHandler(IUnitOfWork unitOfWork, ICacheService cach
             AssignedToId = task.AssignedToId,
             CreatedAt = task.CreatedAt,
         };
+
+        // Notify all connected clients viewing this project
+        await _notifications.NotifyTaskCreated(request.ProjectId.ToString(), result);
+
+        return result;
     }
 }

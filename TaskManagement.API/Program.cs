@@ -1,3 +1,4 @@
+using TaskManagement.API.Hubs;
 using TaskManagement.API.Middleware;
 using TaskManagement.Application;
 using TaskManagement.Infrastructure;
@@ -14,6 +15,9 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
+
+// SignalR is built into ASP.NET Core — no extra package needed
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -34,4 +38,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map the Hub to a URL — clients connect to this endpoint
+app.MapHub<TaskHub>("/hubs/tasks");
+
 app.Run();
